@@ -1,24 +1,68 @@
+import { randomUUID, UUID } from 'node:crypto';
+import WebSocket, { RawData, WebSocketServer } from 'ws';
+
 import { httpServer } from './http_server';
-import { createWebSocketStream, WebSocketServer } from 'ws';
+
+import { isValidWebsocketCommand } from './helpers/isValidWebsocketCommand';
+import { customStringify } from './helpers/customStringify';
+import { CommandType, WebSocketCommand } from './types/types';
 
 const HTTP_PORT = Number(process.env.HTTP_PORT ?? 8181);
 const WS_PORT = Number(process.env.WS_PORT ?? 8181);
 
 const wsServer = new WebSocketServer({ port: WS_PORT });
 
+const clients: Record<UUID, WebSocket> = {};
+
+// A new client connection request received
 wsServer.on('connection', (ws) => {
-  console.log(`WS Server connected on PORT ${WS_PORT}!`);
+  const userId = randomUUID();
+  console.log(`Received a new connection.`);
 
-  const wsStream = createWebSocketStream(ws, {
-    decodeStrings: false,
-    encoding: 'utf-8',
+  // Store the new connection and handle messages
+  clients[userId] = ws;
+  console.log(`${userId} connected.`);
+
+  ws.on('message', (data: RawData) => {
+    console.log('Incoming', data.toString());
+
+    const parsed = JSON.parse(data.toString());
+
+    // validation!
+    if (!isValidWebsocketCommand(parsed)) {
+      console.log('Validation failed!');
+      ws.send(
+        JSON.stringify({
+          type: CommandType.REG,
+          data: JSON.stringify({
+            name: parsed?.data?.name ?? 'ERROR',
+            index: 0,
+            error: true,
+            errorText: 'Validation failed',
+          }),
+          id: 0,
+        }),
+      );
+    }
+
+    const testMsg = {
+      type: CommandType.REG,
+      data: {
+        name: '12345',
+        index: 1,
+        error: false,
+        errorText: '',
+      },
+      id: 0,
+    } satisfies WebSocketCommand;
+
+    const responseString = customStringify(testMsg);
+    console.log('Response', responseString);
+
+    ws.send(responseString);
   });
 
-  wsStream.on('data', async (data: unknown) => {
-    console.log(typeof data === 'string' ? JSON.parse(data) : data);
-
-    wsStream.write(JSON.stringify(data) /* message */);
-  });
+  ws.on('close', () => handleDisconnect(userId));
 });
 
 httpServer.on('connection', (socket) => {
@@ -41,3 +85,27 @@ const start = async () => {
 };
 
 start();
+
+function handleDisconnect(userId: UUID) {
+  console.log(`${userId} disconnected.`);
+  // const json = { type: typesDef.USER_EVENT };
+  // const username = users[userId]?.username || userId;
+  // userActivity.push(`${username} left the document`);
+  // json.data = { users, userActivity }
+  delete clients[userId];
+  // delete users[userId];
+  broadcastMessage({ hello: 'world' });
+}
+
+function broadcastMessage(json: Record<string, unknown>) {
+  // We are sending the current data to all connected active clients
+  const data = JSON.stringify(json);
+
+  for (const userId in clients) {
+    const client = clients[userId as UUID];
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(data);
+    }
+  }
+}
+// User disconnected
