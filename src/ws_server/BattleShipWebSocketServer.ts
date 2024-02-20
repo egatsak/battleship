@@ -1,9 +1,14 @@
 import { UUID, randomUUID } from 'node:crypto';
 import { RawData, WebSocketServer, WebSocket } from 'ws';
 
-import { customStringify } from '../helpers/customStringify';
-import { CommandType, WebSocketCommand } from '../types/types';
-import { isValidWebsocketCommand } from '../helpers/isValidWebsocketCommand';
+import { customStringify } from '../helpers/jsonHandlers';
+import { CommandType, WebSocketCommandWithParsedData } from '../types/types';
+import {
+  isValidWebSocketCommandData,
+  isValidWebsocketCommand,
+} from '../helpers/isValidWebsocketCommand';
+import { battleShipController } from '../controllers/controller';
+import { ClientRequest } from 'node:http';
 
 export class BattleShipWebSocketServer extends WebSocketServer {
   private _clients: Record<UUID, WebSocket> = {};
@@ -29,10 +34,10 @@ export class BattleShipWebSocketServer extends WebSocketServer {
     }
   }
 
-  handleConnect(ws: WebSocket) {
+  handleConnect(ws: WebSocket, req: ClientRequest) {
+    console.log(req.socket?.remoteAddress);
     const userId = randomUUID();
     console.log(`Received a new connection.`);
-
     // Store the new connection and handle messages
     this._clients[userId] = ws;
     console.log(`${userId} connected.`);
@@ -42,41 +47,54 @@ export class BattleShipWebSocketServer extends WebSocketServer {
     ws.on('close', () => this.handleDisconnect(userId));
   }
 
-  messageHandler(data: RawData, ws: WebSocket) {
-    console.log('Incoming', data.toString());
+  messageHandler(message: RawData, ws: WebSocket) {
+    console.log('Incoming', message.toString());
 
-    const parsed = JSON.parse(data.toString());
+    const parsedMessage = JSON.parse(message.toString());
 
     // validation!
-    if (!isValidWebsocketCommand(parsed)) {
-      console.log('Validation failed!');
+    if (!isValidWebsocketCommand(parsedMessage)) {
+      console.log('Command validation failed!');
 
       const errorMsg = {
         type: CommandType.REG,
         data: {
-          name: parsed?.data?.name ?? 'ERROR',
+          name: 'ERROR',
           index: 0,
           error: true,
-          errorText: 'Validation failed',
+          errorText: 'Command validation failed!',
         },
         id: 0,
-      } satisfies WebSocketCommand;
+      } satisfies WebSocketCommandWithParsedData;
 
       return ws.send(customStringify(errorMsg));
     }
 
-    const testMsg = {
-      type: CommandType.REG,
-      data: {
-        name: '12345',
-        index: 1,
-        error: false,
-        errorText: '',
-      },
-      id: 0,
-    } satisfies WebSocketCommand;
+    const parsedMessageData = JSON.parse(parsedMessage.data);
 
-    const responseString = customStringify(testMsg);
+    if (!isValidWebSocketCommandData(parsedMessageData)) {
+      console.log('Command data validation failed!');
+
+      const errorMsg = {
+        type: CommandType.REG,
+        data: {
+          name: parsedMessageData?.name ?? 'ERROR',
+          index: 0,
+          error: true,
+          errorText: 'Command data validation failed!',
+        },
+        id: 0,
+      } satisfies WebSocketCommandWithParsedData;
+
+      return ws.send(customStringify(errorMsg));
+    }
+
+    const result = battleShipController(
+      { ...parsedMessage, data: parsedMessageData },
+      ws,
+    );
+
+    const responseString = customStringify(result);
     console.log('Response', responseString);
 
     return ws.send(responseString);

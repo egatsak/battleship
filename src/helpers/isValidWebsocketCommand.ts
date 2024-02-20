@@ -1,4 +1,4 @@
-import { WebSocketCommand } from '../types/types';
+import { CommandData, WebSocketCommand } from '../types/types';
 
 export function isValidWebsocketCommand(obj: any): obj is WebSocketCommand {
   return (
@@ -7,4 +7,9 @@ export function isValidWebsocketCommand(obj: any): obj is WebSocketCommand {
     'id' in obj &&
     Object.keys(obj).length === 3
   );
+}
+
+export function isValidWebSocketCommandData(data: any): data is CommandData {
+  // TODO match typing
+  return true;
 }

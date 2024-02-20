@@ -1,5 +1,11 @@
 export interface WebSocketCommand {
   type: CommandType;
+  data: string;
+  id: 0;
+}
+
+export interface WebSocketCommandWithParsedData {
+  type: CommandType;
   data: CommandData;
   id: 0;
 }
@@ -19,23 +25,99 @@ export enum CommandType {
   FINISH = 'finish',
 }
 
-export interface CommandData {
-  name?: string;
-  index?: number;
-  error?: boolean;
-  errorText?: string;
-}
+export type CommandData =
+  | RegData
+  | RegResultData
+  | UpdateWinnersData
+  | AddUserToRoomData
+  | CreateGameData
+  | AddShipsData
+  | StartGameData
+  | AttackData
+  | AttackResultData
+  | RandomAttackData
+  | TurnData
+  | FinishData;
 
 export interface Ship {
-  position: {
-    x: number;
-    y: number;
-  };
+  position: Position;
   direction: boolean;
   length: number;
   type: ShipType;
 }
 
+export interface Position {
+  x: number;
+  y: number;
+}
+
 export type ShipType = 'small' | 'medium' | 'large' | 'huge';
 
 export type AttackStatus = 'miss' | 'killed' | 'shot';
+
+export interface RegData {
+  name: string;
+  password: string;
+}
+
+export interface RegResultData {
+  name: string;
+  index: number;
+  error: boolean;
+  errorText: string;
+}
+
+export type UpdateWinnersData = Array<{ name: string; wins: number }>;
+
+export type CreateRoomData = '';
+
+export interface AddUserToRoomData {
+  indexRoom: number;
+}
+
+export interface CreateGameData {
+  idGame: number;
+  idPlayer: number;
+}
+
+export type UpdateRoomData = Array<{
+  roomId: number;
+  roomUsers: Array<{ name: string; index: number }>;
+}>;
+
+export interface AddShipsData {
+  gameId: number;
+  ships: Ship[];
+  indexPlayer: number;
+}
+
+export interface StartGameData {
+  ships: Ship[];
+  currentPlayerIndex: number;
+}
+
+export interface AttackData {
+  gameId: number;
+  x: number;
+  y: number;
+  indexPlayer: number;
+}
+
+export interface AttackResultData {
+  position: Position;
+  currentPlayer: number;
+  status: AttackStatus;
+}
+
+export interface RandomAttackData {
+  gameId: number;
+  indexPlayer: number;
+}
+
+export interface TurnData {
+  currentPlayer: number;
+}
+
+export interface FinishData {
+  winPlayer: number;
+}
