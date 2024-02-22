@@ -25,6 +25,19 @@ export enum CommandType {
   FINISH = 'finish',
 }
 
+export interface Player {
+  id: number;
+  name: string;
+  password: string;
+  wins: number;
+}
+
+export interface Room {
+  id: number;
+  playerId: number;
+  playerName: string;
+}
+
 export type CommandData =
   | RegData
   | RegResultData

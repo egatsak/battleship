@@ -1,11 +1,13 @@
-import { Field } from './Field';
-import { Player } from './Player';
+import { Room } from '../types/types';
 
-export class Room {
-  constructor(
-    private readonly player1: Player,
-    private readonly player2: Player,
-    private readonly field1: Field,
-    private readonly field2: Field,
-  ) {}
+export class RoomEntity implements Room {
+  id: number;
+  playerId: number;
+  playerName: string;
+
+  constructor({ id, playerId, playerName }: RoomEntity) {
+    this.id = id;
+    this.playerId = playerId;
+    this.playerName = playerName;
+  }
 }
