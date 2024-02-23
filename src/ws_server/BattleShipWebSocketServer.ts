@@ -1,4 +1,3 @@
-import { UUID, randomUUID } from 'node:crypto';
 import { RawData, WebSocketServer, WebSocket } from 'ws';
 
 import { customStringify } from '../helpers/jsonHandlers';
@@ -11,7 +10,8 @@ import { battleShipController } from '../controllers/controller';
 import { ClientRequest } from 'node:http';
 
 export class BattleShipWebSocketServer extends WebSocketServer {
-  private _clients: Record<UUID, WebSocket> = {};
+  private _clients: Record<number, WebSocket> = {};
+  private _clientIdCounter: number = 0;
 
   constructor({ port }: { port: number }) {
     super({ port });
@@ -26,17 +26,18 @@ export class BattleShipWebSocketServer extends WebSocketServer {
     const data = JSON.stringify({ server: 'closed' });
 
     for (const userId in this._clients) {
-      const client = this._clients[userId as UUID];
+      const client = this._clients[userId];
       /*       if (client.readyState === WebSocket.OPEN) { */
       client.send(data);
       client.close();
+      delete this._clients[userId];
       /*    } */
     }
   }
 
   handleConnect(ws: WebSocket, req: ClientRequest) {
     console.log(req.socket?.remoteAddress);
-    const userId = randomUUID();
+    const userId = ++this._clientIdCounter;
     console.log(`Received a new connection.`);
     // Store the new connection and handle messages
     this._clients[userId] = ws;
@@ -100,7 +101,7 @@ export class BattleShipWebSocketServer extends WebSocketServer {
     return ws.send(responseString);
   }
 
-  handleDisconnect(userId: UUID) {
+  handleDisconnect(userId: number) {
     console.log(`${userId} disconnected.`);
     // const json = { type: typesDef.USER_EVENT };
     // const username = users[userId]?.username || userId;
@@ -116,7 +117,7 @@ export class BattleShipWebSocketServer extends WebSocketServer {
     const data = JSON.stringify(json);
 
     for (const userId in this._clients) {
-      const client = this._clients[userId as UUID];
+      const client = this._clients[userId];
       /*       if (client.readyState === WebSocket.OPEN) { */
       client.send(data);
       /*    } */

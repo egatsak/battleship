@@ -1,5 +1,4 @@
 import { httpServer } from './http_server';
-
 import { BattleShipWebSocketServer } from './ws_server/BattleShipWebSocketServer';
 
 const HTTP_PORT = Number(process.env.HTTP_PORT ?? 8181);

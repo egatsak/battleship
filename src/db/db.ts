@@ -35,6 +35,10 @@ export class Database {
     return this.players.find((item) => item.id === id) ?? null;
   }
 
+  findPlayerByName(name: string) {
+    return this.players.find((item) => item.name === name) ?? null;
+  }
+
   deletePlayer(id: number) {
     const ind = this.players.findIndex((item) => item.id === id);
 
@@ -56,7 +60,11 @@ export class Database {
   }
 
   findRoomById(id: number) {
-    return this.players.find((item) => item.id === id) ?? null;
+    return this.rooms.find((item) => item.id === id) ?? null;
+  }
+
+  findRoomByPlayerId(playerId: number) {
+    return this.rooms.find((item) => item.playerId === playerId) ?? null;
   }
 
   deleteRoom(id: number) {

@@ -64,6 +64,8 @@ export interface Position {
   y: number;
 }
 
+export type DotValue = boolean | null;
+
 export type ShipType = 'small' | 'medium' | 'large' | 'huge';
 
 export type AttackStatus = 'miss' | 'killed' | 'shot';
