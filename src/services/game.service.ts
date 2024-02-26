@@ -126,8 +126,6 @@ export class GameService {
     const closedGames: Game[] = [];
 
     for (const game of this._games.values()) {
-      // TODO fix issue with playerId
-
       if (game.players.includes(playerId)) {
         game.surrender(playerId);
         this._handleFinishedGame(game);
@@ -144,8 +142,6 @@ export class GameService {
     if (!player) {
       throw new PlayerNotFoundError(playerId);
     }
-
-    // TODO handle player deletion from all rooms
 
     const game = new Game({ randomId: ++this._gameCounter, players: [BOT_ID, playerId] });
 

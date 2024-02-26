@@ -13,7 +13,7 @@ import { SHIPS } from '../constants/constants';
 
 export class Game {
   private readonly _id: number;
-  private _players: number[] = [0, 1];
+  private _players: [number, number] = [0, 1];
   private _fields: [Field, Field];
   private _currentPlayerIndex: number = 0;
   private _winner?: number;
@@ -21,8 +21,7 @@ export class Game {
 
   constructor({ randomId, players }: { randomId: number; players: [number, number] }) {
     this._id = randomId;
-    // TODO fix types
-    this._players = players as Array<number>;
+    this._players = players;
     this._fields = [new Field(), new Field()];
   }
 
@@ -179,7 +178,7 @@ export class Game {
     deckPosition.forEach((pos) => this._enemyField.setValue(pos, true));
     aroundPosition.forEach((pos) => this._enemyField.setValue(pos, false));
 
-    this._getWinner();
+    this._checkWinner();
     return [
       ...deckPosition.map(
         (pos) =>
@@ -200,7 +199,7 @@ export class Game {
     ];
   }
 
-  surrender(player: number) {
+  surrender(player: number): void {
     if (!this._players.includes(player)) {
       throw new InvalidPlayerError(this._id, player);
     }
@@ -208,11 +207,11 @@ export class Game {
     this._winner = player === this.currentPlayer ? this.enemyPlayer : this.currentPlayer;
   }
 
-  private _getPlayerIndex(player: number) {
+  private _getPlayerIndex(player: number): number {
     return this._players.findIndex((value) => value === player);
   }
 
-  private _getWinner() {
+  private _checkWinner(): void {
     if (this._enemyShips.every((ship) => ship.isDestroyed)) {
       this._winner = this.currentPlayer;
     }
@@ -235,7 +234,7 @@ export class Game {
     return false;
   }
 
-  private _swapPlayers() {
+  private _swapPlayers(): void {
     this._currentPlayerIndex = this._enemyIndex;
   }
 }

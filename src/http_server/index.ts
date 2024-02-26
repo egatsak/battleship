@@ -9,6 +9,7 @@ export const httpServer = http.createServer(function (req, res) {
         (req.url === '/' ? '/front/index.html' : '/front' + req.url)
       : path.resolve(__dirname, '..') +
         (req.url === '/' ? '/front/index.html' : '/front' + req.url);
+
   fs.readFile(file_path, function (err, data) {
     if (err) {
       console.error(err);

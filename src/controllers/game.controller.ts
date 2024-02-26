@@ -35,12 +35,12 @@ export class BattleShipController {
     } satisfies Record<CommandType, CommandHandler>;
   }
 
-  handleIncoming(message: WebSocketCommandWithParsedData, context: WebSocketContext) {
+  handleIncoming(message: WebSocketCommandWithParsedData, context: WebSocketContext): void {
     const handler = this._commandMapper[message.type].bind(this);
     handler(message.data, context);
   }
 
-  handleClose = (context: WebSocketContext) => {
+  handleClose = (context: WebSocketContext): void => {
     const { rooms, closedGames } = this._gameService.logout(context.id);
 
     if (rooms.length) {
@@ -60,7 +60,7 @@ export class BattleShipController {
     }
   };
 
-  reg(data: CommandData, context: WebSocketContext) {
+  reg(data: CommandData, context: WebSocketContext): void {
     const loginPayload = data as RegData;
 
     try {
@@ -81,21 +81,19 @@ export class BattleShipController {
     }
   }
 
-  createRoom(_data: CommandData, context: WebSocketContext) {
+  createRoom(_data: CommandData, context: WebSocketContext): void {
     this._gameService.createRoom(context.id);
 
     const rooms = this._gameService.getRooms();
     context.broadcast([MessageGenerator.updateRoomMessage(rooms)]);
   }
 
-  addUserToRoom(data: CommandData, context: WebSocketContext) {
+  addUserToRoom(data: CommandData, context: WebSocketContext): void {
     const { indexRoom } = data as AddUserToRoomData;
 
     const game = this._gameService.joinRoom(context.id, indexRoom);
 
     if (game) {
-      // TODO
-
       game.players.forEach((playerId) =>
         context.broadcast([MessageGenerator.createGameMessage(game.id, playerId)], [playerId]),
       );
@@ -105,7 +103,7 @@ export class BattleShipController {
     }
   }
 
-  addShips(data: CommandData, context: WebSocketContext) {
+  addShips(data: CommandData, context: WebSocketContext): void {
     const { gameId, ships, indexPlayer } = data as AddShipsData;
 
     const game = this._gameService.addShips(gameId, indexPlayer, ships);
@@ -134,12 +132,12 @@ export class BattleShipController {
       );
 
       if (game.currentPlayer === BOT_ID) {
-        this._botAttack(gameId, context);
+        this._attackByBot(gameId, context);
       }
     }
   }
 
-  attack(data: CommandData, context: WebSocketContext) {
+  attack(data: CommandData, context: WebSocketContext): void {
     const { gameId, x, y, indexPlayer } = data as AttackData;
 
     let position: Position | undefined;
@@ -154,7 +152,7 @@ export class BattleShipController {
     context.broadcast([MessageGenerator.turnMessage(game.currentPlayer)], game.players);
 
     if (game.status === 'started' && game.currentPlayer === BOT_ID) {
-      this._botAttack(gameId, context);
+      this._attackByBot(gameId, context);
     }
 
     if (game.winner) {
@@ -167,11 +165,11 @@ export class BattleShipController {
     }
   }
 
-  randomAttack(data: CommandData, context: WebSocketContext) {
+  randomAttack(data: CommandData, context: WebSocketContext): void {
     this.attack(data, context);
   }
 
-  singlePlay(_data: CommandData, context: WebSocketContext) {
+  singlePlay(_data: CommandData, context: WebSocketContext): void {
     const game = this._gameService.singlePlayer(context.id);
     context.send([MessageGenerator.createGameMessage(game.id, context.id)]);
 
@@ -189,13 +187,13 @@ export class BattleShipController {
     };
   }
 
-  private _getShipType(length: number) {
+  private _getShipType(length: number): ShipType {
     const types = ['small', 'medium', 'large', 'huge'] as ShipType[];
 
     return types[length - 1] ?? 'small';
   }
 
-  private _botAttack(gameId: number, context: WebSocketContext) {
+  private _attackByBot(gameId: number, context: WebSocketContext): void {
     setTimeout(() => this.randomAttack({ gameId, indexPlayer: BOT_ID }, context), BOT_TIMEOUT);
   }
 }

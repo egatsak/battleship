@@ -24,8 +24,18 @@ export class BattleShipWebSocketServer extends WebSocketServer {
   }
 
   handleServerClose(): void {
-    // TODO send message to client?
-    const data = JSON.stringify({ server: 'closed' });
+    const errorMsg = {
+      type: ResponseType.REG,
+      data: {
+        name: 'ERROR',
+        index: 0,
+        error: true,
+        errorText: 'Internal server error',
+      },
+      id: 0,
+    } satisfies WebSocketResponseWithParsedData;
+
+    const data = customStringify(errorMsg);
 
     for (const userId in this._clients) {
       const client = this._clients[userId];
@@ -77,7 +87,7 @@ export class BattleShipWebSocketServer extends WebSocketServer {
 
       const parsedMessageData = parsedMessage.data ? JSON.parse(parsedMessage.data) : '';
 
-      if (!isValidWebSocketCommandData(parsedMessageData)) {
+      if (!isValidWebSocketCommandData(parsedMessage.type, parsedMessageData)) {
         console.log('Command data validation failed!');
 
         const errorMsg = {
@@ -129,7 +139,7 @@ export class BattleShipWebSocketServer extends WebSocketServer {
         clients.forEach((ws) => ws.send(rawMessage));
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
