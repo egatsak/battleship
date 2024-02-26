@@ -16,46 +16,44 @@ export class Field {
     return this._dots;
   }
 
-  isDotEmpty(position: Position) {
-    return this.getValue(position) === null;
-  }
-
-  areDotsEmpty(positions: Position[]) {
-    return positions.every((pos) => this.isDotEmpty(pos));
-  }
-
-  getValue(position: Position) {
+  getValue(position: Position): DotValue | void {
     if (this.isDotInsideField(position)) {
       return this._dots[position.y][position.x];
     }
   }
 
-  setValue(position: Position, value: DotValue) {
+  setValue(position: Position, value: DotValue): void {
     if (this.isDotInsideField(position)) {
       this._dots[position.y][position.x] = value;
     }
   }
 
-  setValues(positions: Position[], value: DotValue) {
+  setValues(positions: Position[], value: DotValue): void {
     positions.forEach((position) => this.setValue(position, value));
   }
 
-  private _createEmptyField() {
+  private _createEmptyField(): DotValue[][] {
     const emptyField: null[][] = new Array(this._size)
-      .fill(null)
+      .fill(0)
       .map(() => Array(this._size).fill(null));
+
     return emptyField;
   }
 
-  private _isCoordinateInside(coord: number) {
+  private _isCoordinateInside(coord: number): boolean {
     return coord >= 0 && coord < this._size;
   }
 
-  isDotInsideField(position: Position) {
-    return (
-      this._isCoordinateInside(position.x) &&
-      this._isCoordinateInside(position.y)
-    );
+  isDotInsideField(position: Position): boolean {
+    return this._isCoordinateInside(position.x) && this._isCoordinateInside(position.y);
+  }
+
+  isDotEmpty(position: Position): boolean {
+    return this.getValue(position) === null;
+  }
+
+  areDotsEmpty(positions: Position[]): boolean {
+    return positions.every((pos) => this.isDotEmpty(pos));
   }
 
   getEmptyPositions(): Position[] {
@@ -66,7 +64,7 @@ export class Field {
     return result.filter(Boolean) as Position[]; // known TS issue (fixed by Total Typescript)
   }
 
-  getRandomEmptyPosition() {
+  getRandomEmptyPosition(): Position | null {
     const positions = this.getEmptyPositions();
     const randomInd = randomInt(positions.length);
     return positions[randomInd] ?? null;

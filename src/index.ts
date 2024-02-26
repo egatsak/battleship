@@ -18,13 +18,22 @@ process.on('SIGINT', () => {
   httpServer.close();
 });
 
-const start = async () => {
+process.on('uncaughtException', (error) => {
+  console.error(error);
+  wsServer.handleServerClose();
+  wsServer.close();
+  httpServer.close();
+  process.exit(1);
+});
+
+const start = () => {
   try {
     httpServer.listen(HTTP_PORT, () => {
       console.log(`Start static http server on the ${HTTP_PORT} port!`);
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    process.exit(1);
   }
 };
 

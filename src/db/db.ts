@@ -1,3 +1,4 @@
+import { DatabaseError } from '../helpers/errors';
 import { PlayerEntity } from '../models/Player';
 import { RoomEntity } from '../models/Room';
 import { Player, Room } from '../types/types';
@@ -23,8 +24,8 @@ export class Database {
     return this.players;
   }
 
-  createPlayer(dto: Omit<Player, 'id'>) {
-    const player = new PlayerEntity({ ...dto, id: ++this.playersIdCount });
+  createPlayer(dto: Omit<Player, 'id' | 'wins'>) {
+    const player = new PlayerEntity({ ...dto, wins: 0, id: ++this.playersIdCount });
 
     this.players.push(player);
 
@@ -49,6 +50,30 @@ export class Database {
     const deleted = this.players.splice(ind, 1);
 
     return deleted[0];
+  }
+
+  updatePlayerId(oldId: number, newId: number) {
+    const playerToUpdate = this.players.find((item) => item.id === oldId);
+
+    if (!playerToUpdate) {
+      throw new DatabaseError(`Player by ID ${oldId} not found`);
+    }
+
+    playerToUpdate.id = newId;
+
+    return playerToUpdate;
+  }
+
+  updatePlayerWins(id: number) {
+    const playerToUpdate = this.players.find((item) => item.id === id);
+
+    if (!playerToUpdate) {
+      throw new DatabaseError(`Player by ID ${id} not found`);
+    }
+
+    playerToUpdate.wins = playerToUpdate.wins + 1;
+
+    return playerToUpdate;
   }
 
   createRoom(dto: Omit<Room, 'id'>) {

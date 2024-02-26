@@ -10,19 +10,37 @@ export interface WebSocketCommandWithParsedData {
   id: 0;
 }
 
+export interface WebSocketResponseWithParsedData {
+  type: ResponseType;
+  data: CommandData;
+  id: 0;
+}
+
+export interface WebSocketContext {
+  id: number;
+  send: (message: WebSocketResponseWithParsedData[]) => void;
+  broadcast: (message: WebSocketResponseWithParsedData[], connection?: number[]) => void;
+}
+
 export enum CommandType {
   REG = 'reg',
-  UPDATE_WINNERS = 'update_winners',
   CREATE_ROOM = 'create_room',
   ADD_USER_TO_ROOM = 'add_user_to_room',
-  CREATE_GAME = 'create_game',
-  UPDATE_ROOM = 'update_room',
   ADD_SHIPS = 'add_ships',
-  START_GAME = 'start_game',
   ATTACK = 'attack',
   RANDOM_ATTACK = 'randomAttack',
+  SINGLE_PLAY = 'single_play',
+}
+
+export enum ResponseType {
+  REG = 'reg',
+  CREATE_GAME = 'create_game',
+  START_GAME = 'start_game',
   TURN = 'turn',
+  ATTACK = 'attack',
   FINISH = 'finish',
+  UPDATE_ROOM = 'update_room',
+  UPDATE_WINNERS = 'update_winners',
 }
 
 export interface Player {
@@ -50,14 +68,17 @@ export type CommandData =
   | AttackResultData
   | RandomAttackData
   | TurnData
-  | FinishData;
+  | FinishData
+  | UpdateRoomData;
 
-export interface Ship {
+export interface ShipData {
   position: Position;
   direction: boolean;
   length: number;
   type: ShipType;
 }
+
+export type CommandHandler = (data: CommandData, context: WebSocketContext) => void;
 
 export interface Position {
   x: number;
@@ -65,6 +86,8 @@ export interface Position {
 }
 
 export type DotValue = boolean | null;
+
+export type GameStatus = 'created' | 'started' | 'finished';
 
 export type ShipType = 'small' | 'medium' | 'large' | 'huge';
 
@@ -102,12 +125,12 @@ export type UpdateRoomData = Array<{
 
 export interface AddShipsData {
   gameId: number;
-  ships: Ship[];
+  ships: ShipData[];
   indexPlayer: number;
 }
 
 export interface StartGameData {
-  ships: Ship[];
+  ships: ShipData[];
   currentPlayerIndex: number;
 }
 
