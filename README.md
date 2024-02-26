@@ -1,10 +1,14 @@
-# RSSchool NodeJS websocket task template
+# RSSchool NodeJS websocket task
 > Static http server and base task packages. 
 > By default WebSocket client tries to connect to the 3000 port.
 
 ## Installation
-1. Clone/download repo
-2. `npm install`
+1. Clone/download repo `git clone https://github.com/egatsak/battleship.git`
+2. `get checkout dev`
+3. `npm install`
+4. Rename `.env.example` to `.env`
+
+### NB! Please run different instances of game in different browsers! 
 
 ## Usage
 **Development**
